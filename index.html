@@ -326,6 +326,50 @@
       transition: background 0.2s;
     }
     .email-form button:hover { background: var(--blue-dark); }
+    .consent {
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      text-align: left;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .consent input[type="checkbox"] {
+      margin-top: 0.2rem;
+      flex-shrink: 0;
+    }
+    .consent a { color: var(--blue); text-decoration: underline; }
+
+    /* Privacy policy */
+    .privacy {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem;
+    }
+    .privacy h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+    }
+    .privacy h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .privacy p, .privacy ul {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    .privacy ul {
+      padding-left: 1.5rem;
+    }
+    .privacy li {
+      margin-bottom: 0.35rem;
+    }
+    .privacy a { color: var(--blue); }
 
     /* Footer */
     footer {
@@ -485,15 +529,58 @@
       Jätä sähköpostisi niin ilmoitamme kun verovähennyskone aukeaa.
       Ensimmäiset käyttäjät pääsevät testaamaan ilmaiseksi.
     </p>
-    <form class="email-form" onsubmit="handleSubmit(event)">
-      <input type="email" placeholder="sinun@email.fi" required id="emailInput">
+    <form class="email-form" id="signupForm" action="https://formspree.io/f/xlgoyneq" method="POST">
+      <input type="email" name="email" placeholder="sinun@email.fi" required id="emailInput">
       <button type="submit" id="submitBtn">Ilmoittaudu</button>
+      <label class="consent">
+        <input type="checkbox" required>
+        Hyväksyn, että sähköpostiosoitteeni tallennetaan ilmoitusta varten.
+        Lue <a href="#tietosuoja">tietosuojaseloste</a>.
+      </label>
     </form>
+  </section>
+
+  <section class="privacy" id="tietosuoja">
+    <h2>Tietosuojaseloste</h2>
+
+    <h3>Rekisterinpitäjä</h3>
+    <p>verovähennyskone.fi</p>
+
+    <h3>Kerättävät tiedot</h3>
+    <p>Keräämme ainoastaan sähköpostiosoitteesi, kun ilmoittaudut koekäyttäjäksi. Emme kerää muita henkilötietoja tällä sivustolla.</p>
+
+    <h3>Tietojen käyttötarkoitus</h3>
+    <p>Sähköpostiosoitettasi käytetään ainoastaan palvelun julkaisusta ja koekäytöstä ilmoittamiseen. Emme lähetä markkinointiviestejä emmekä luovuta tietojasi kolmansille osapuolille markkinointitarkoituksiin.</p>
+
+    <h3>Tietojen käsittelijä ja sijainti</h3>
+    <p>
+      Lomakkeen käsittelyyn käytämme <a href="https://formspree.io" target="_blank" rel="noopener">Formspree</a>-palvelua (Formspree, Inc., USA),
+      joka toimii tietojen käsittelijänä. Tämä tarkoittaa, että sähköpostiosoitteesi siirretään ja tallennetaan Yhdysvaltoihin.
+      Siirto perustuu EU:n vakiosopimuslausekkeisiin (Standard Contractual Clauses, SCC).
+    </p>
+
+    <h3>Tietojen säilytysaika</h3>
+    <p>Säilytämme sähköpostiosoitteesi kunnes palvelu on julkaistu ja olet saanut ilmoituksen, minkä jälkeen tiedot poistetaan. Voit myös pyytää tietojesi poistamista milloin tahansa.</p>
+
+    <h3>Oikeutesi (GDPR)</h3>
+    <p>Sinulla on oikeus:</p>
+    <ul>
+      <li>Pyytää pääsyä itseäsi koskeviin tietoihin</li>
+      <li>Pyytää tietojesi oikaisua tai poistoa</li>
+      <li>Peruuttaa suostumuksesi milloin tahansa</li>
+      <li>Tehdä valitus tietosuojavaltuutetulle (<a href="https://tietosuoja.fi" target="_blank" rel="noopener">tietosuoja.fi</a>)</li>
+    </ul>
+
+    <h3>Yhteydenotto</h3>
+    <p>Tietosuojaan liittyvissä asioissa voit ottaa yhteyttä sähköpostitse: <strong>tietosuoja@verovähennyskone.fi</strong></p>
+
+    <p><em>Päivitetty 10.4.2026</em></p>
   </section>
 
   <footer>
     <p>
       &copy; 2026 verovähennyskone.fi &mdash; Ei ole veroviranomainen eikä korvaa ammattimaista veroneuvontaa.
+      <br><a href="#tietosuoja">Tietosuojaseloste</a>
     </p>
   </footer>
 
@@ -516,16 +603,35 @@
     const ticker = document.getElementById('ticker');
     ticker.innerHTML = facts.map(f => `<span class="ticker-item">${f}</span>`).join('');
 
-    // Simple form handler (no backend yet)
-    function handleSubmit(e) {
+    // Formspree AJAX submission
+    const form = document.getElementById('signupForm');
+    form.addEventListener('submit', async function(e) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
       const input = document.getElementById('emailInput');
-      btn.textContent = 'Kiitos!';
-      btn.style.background = '#00A86B';
-      input.disabled = true;
+      btn.textContent = 'Lähetetään...';
       btn.disabled = true;
-    }
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) {
+          btn.textContent = 'Kiitos!';
+          btn.style.background = '#00A86B';
+          input.disabled = true;
+        } else {
+          btn.textContent = 'Virhe — yritä uudelleen';
+          btn.style.background = '#e53e3e';
+          btn.disabled = false;
+        }
+      } catch {
+        btn.textContent = 'Virhe — yritä uudelleen';
+        btn.style.background = '#e53e3e';
+        btn.disabled = false;
+      }
+    });
   </script>
 
 </body>
